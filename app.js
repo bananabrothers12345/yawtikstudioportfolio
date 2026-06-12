@@ -128,6 +128,8 @@ const miniChart = document.querySelector("#miniChart");
 const campaignCards = document.querySelector("#campaignCards");
 const comparisonBody = document.querySelector("#comparisonBody");
 const year = document.querySelector("#year");
+const calendarTitle = document.querySelector("#calendarTitle");
+const calendarGrid = document.querySelector("#calendarGrid");
 
 const businessCards = [
   {
@@ -290,6 +292,69 @@ campaigns.forEach((campaign) => {
   `;
   comparisonBody.appendChild(row);
 });
+
+const monthNames = [
+  "Enero",
+  "Febrero",
+  "Marzo",
+  "Abril",
+  "Mayo",
+  "Junio",
+  "Julio",
+  "Agosto",
+  "Septiembre",
+  "Octubre",
+  "Noviembre",
+  "Diciembre",
+];
+
+function renderAvailabilityCalendar(date) {
+  const yearValue = date.getFullYear();
+  const monthValue = date.getMonth();
+  const firstDay = new Date(yearValue, monthValue, 1);
+  const lastDay = new Date(yearValue, monthValue + 1, 0).getDate();
+  const offset = (firstDay.getDay() + 6) % 7;
+  const today = new Date();
+
+  calendarTitle.textContent = `${monthNames[monthValue]} ${yearValue}`;
+  calendarGrid.innerHTML = "";
+
+  for (let index = 0; index < offset; index += 1) {
+    const emptyCell = document.createElement("div");
+    emptyCell.className = "calendar-day-empty";
+    calendarGrid.appendChild(emptyCell);
+  }
+
+  for (let day = 1; day <= lastDay; day += 1) {
+    const currentDate = new Date(yearValue, monthValue, day);
+    const jsDay = currentDate.getDay();
+    const isToday =
+      today.getFullYear() === yearValue &&
+      today.getMonth() === monthValue &&
+      today.getDate() === day;
+
+    let status = "available";
+    let label = "Disponible";
+
+    if (jsDay === 5) {
+      status = "limited";
+      label = "Limitado";
+    } else if (jsDay === 0 || jsDay === 6) {
+      status = "unavailable";
+      label = "No disponible";
+    }
+
+    const dayCell = document.createElement("div");
+    dayCell.className = `calendar-day ${status}${isToday ? " today" : ""}`;
+    dayCell.innerHTML = `
+      <span class="calendar-day-number">${day}</span>
+      <span class="calendar-day-label">${label}</span>
+    `;
+    calendarGrid.appendChild(dayCell);
+  }
+}
+
+renderAvailabilityCalendar(new Date());
 
 const revealElements = document.querySelectorAll(".reveal");
 
