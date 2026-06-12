@@ -130,6 +130,14 @@ const comparisonBody = document.querySelector("#comparisonBody");
 const year = document.querySelector("#year");
 const calendarTitle = document.querySelector("#calendarTitle");
 const calendarGrid = document.querySelector("#calendarGrid");
+const calendarSelection = document.querySelector("#calendarSelection");
+const scheduleForm = document.querySelector("#scheduleForm");
+const scheduleDate = document.querySelector("#scheduleDate");
+const scheduleTime = document.querySelector("#scheduleTime");
+const scheduleName = document.querySelector("#scheduleName");
+const schedulePhone = document.querySelector("#schedulePhone");
+const scheduleEmail = document.querySelector("#scheduleEmail");
+const scheduleNote = document.querySelector("#scheduleNote");
 
 const businessCards = [
   {
@@ -308,6 +316,30 @@ const monthNames = [
   "Diciembre",
 ];
 
+const whatsappNumber = "523411209845";
+let selectedScheduleDate = null;
+
+function formatLongDate(date) {
+  return new Intl.DateTimeFormat("es-MX", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  }).format(date);
+}
+
+function updateSelectedDateUI() {
+  if (!selectedScheduleDate) {
+    scheduleDate.value = "";
+    calendarSelection.textContent = "Selecciona un día disponible para preparar tu mensaje de agenda.";
+    return;
+  }
+
+  const readableDate = formatLongDate(selectedScheduleDate);
+  scheduleDate.value = readableDate.charAt(0).toUpperCase() + readableDate.slice(1);
+  calendarSelection.textContent = `Día seleccionado: ${scheduleDate.value}`;
+}
+
 function renderAvailabilityCalendar(date) {
   const yearValue = date.getFullYear();
   const monthValue = date.getMonth();
@@ -326,13 +358,21 @@ function renderAvailabilityCalendar(date) {
   }
 
   for (let day = 1; day <= lastDay; day += 1) {
+    const currentDate = new Date(yearValue, monthValue, day);
     const isToday =
       today.getFullYear() === yearValue &&
       today.getMonth() === monthValue &&
       today.getDate() === day;
+    const isSelected =
+      selectedScheduleDate &&
+      selectedScheduleDate.getFullYear() === yearValue &&
+      selectedScheduleDate.getMonth() === monthValue &&
+      selectedScheduleDate.getDate() === day;
 
-    const dayCell = document.createElement("div");
-    dayCell.className = `calendar-day available${isToday ? " today" : ""}`;
+    const dayCell = document.createElement("button");
+    dayCell.type = "button";
+    dayCell.className = `calendar-day available${isToday ? " today" : ""}${isSelected ? " selected" : ""}`;
+    dayCell.setAttribute("aria-label", `Agendar ${formatLongDate(currentDate)}`);
     dayCell.innerHTML = `
       <div class="calendar-day-top">
         <span class="calendar-day-number">${day}</span>
@@ -343,11 +383,56 @@ function renderAvailabilityCalendar(date) {
         Libre
       </span>
     `;
+    dayCell.addEventListener("click", () => {
+      selectedScheduleDate = currentDate;
+      updateSelectedDateUI();
+      renderAvailabilityCalendar(date);
+      scheduleNote.textContent =
+        "Completa tus datos y enviaremos tu solicitud directamente por WhatsApp.";
+      scheduleNote.classList.remove("is-error", "is-success");
+    });
     calendarGrid.appendChild(dayCell);
   }
 }
 
 renderAvailabilityCalendar(new Date());
+updateSelectedDateUI();
+
+scheduleForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+
+  if (!selectedScheduleDate) {
+    scheduleNote.textContent = "Selecciona primero un día del calendario para continuar.";
+    scheduleNote.classList.add("is-error");
+    scheduleNote.classList.remove("is-success");
+    return;
+  }
+
+  if (!scheduleForm.reportValidity()) {
+    scheduleNote.textContent = "Completa los datos requeridos para generar la solicitud.";
+    scheduleNote.classList.add("is-error");
+    scheduleNote.classList.remove("is-success");
+    return;
+  }
+
+  const longDate = formatLongDate(selectedScheduleDate);
+  const message = [
+    "Hola YAWTIK, quiero agendar una cita.",
+    "",
+    `Dia seleccionado: ${longDate}`,
+    `Hora de la cita: ${scheduleTime.value}`,
+    `Empresa o persona: ${scheduleName.value.trim()}`,
+    `Numero de contacto: ${schedulePhone.value.trim()}`,
+    `Correo: ${scheduleEmail.value.trim()}`,
+  ].join("\n");
+
+  const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
+
+  scheduleNote.textContent = "Abriendo WhatsApp con tu solicitud prehecha.";
+  scheduleNote.classList.remove("is-error");
+  scheduleNote.classList.add("is-success");
+  window.open(whatsappUrl, "_blank", "noopener");
+});
 
 const revealElements = document.querySelectorAll(".reveal");
 
