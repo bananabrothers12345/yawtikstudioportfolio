@@ -326,29 +326,22 @@ function renderAvailabilityCalendar(date) {
   }
 
   for (let day = 1; day <= lastDay; day += 1) {
-    const currentDate = new Date(yearValue, monthValue, day);
-    const jsDay = currentDate.getDay();
     const isToday =
       today.getFullYear() === yearValue &&
       today.getMonth() === monthValue &&
       today.getDate() === day;
 
-    let status = "available";
-    let label = "Disponible";
-
-    if (jsDay === 5) {
-      status = "limited";
-      label = "Limitado";
-    } else if (jsDay === 0 || jsDay === 6) {
-      status = "unavailable";
-      label = "No disponible";
-    }
-
     const dayCell = document.createElement("div");
-    dayCell.className = `calendar-day ${status}${isToday ? " today" : ""}`;
+    dayCell.className = `calendar-day available${isToday ? " today" : ""}`;
     dayCell.innerHTML = `
-      <span class="calendar-day-number">${day}</span>
-      <span class="calendar-day-label">${label}</span>
+      <div class="calendar-day-top">
+        <span class="calendar-day-number">${day}</span>
+        ${isToday ? '<span class="calendar-day-tag">Hoy</span>' : ""}
+      </div>
+      <span class="calendar-day-pill">
+        <span class="calendar-day-dot"></span>
+        Libre
+      </span>
     `;
     calendarGrid.appendChild(dayCell);
   }
